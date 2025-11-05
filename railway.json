@@ -1,10 +1,8 @@
 {
-  "build": {
-    "builder": "NIXPACKS"
-  },
+  "build": { "builder": "NIXPACKS" },
   "deploy": {
     "startCommand": "npm start",
-    "healthcheckPath": "/api/heartrate/history?userId=test",
+    "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10

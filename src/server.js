@@ -46,6 +46,10 @@ connectMongo();
 app.get("/", (req, res) => {
     res.send("✅ Server is running on Railway");
 });
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok" });
+});
+
 // Routes
 app.use("/api/data", dataRoutes);
 app.use("/api/auth", authRoutes);
