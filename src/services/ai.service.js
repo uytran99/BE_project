@@ -369,9 +369,32 @@ export const analyzeTrend = async (heartRateHistory) => {
     }
 };
 
-// Runtime AI approaches used by this service:
-// 1) Attempts to call an advanced Python AI (external script run_ai.py) — may use sklearn/TF or a more complex pipeline.
-// 2) Fallback to a TensorFlow.js layers model loaded from heart_model/model.json (neural network inference with @tensorflow/tfjs-node).
-// 3) If models are unavailable or inputs invalid, a rule-based diagnosis (threshold rules) is used as fallback.
+// Dummy implementation nếu chưa có
+export function analyzeHeartRate(bpm) {
+    // Ví dụ logic đơn giản, bạn có thể thay bằng AI thật
+    let diagnosis = "Normal";
+    let severity = "low";
+    let recommendations = [];
+    let confidence = 0.9;
+
+    if (bpm < 50) {
+        diagnosis = "Bradycardia";
+        severity = "medium";
+        recommendations = ["Check for symptoms", "Consult doctor if persistent"];
+        confidence = 0.8;
+    } else if (bpm > 100) {
+        diagnosis = "Tachycardia";
+        severity = "high";
+        recommendations = ["Rest", "Consult doctor"];
+        confidence = 0.85;
+    }
+
+    return {
+        diagnosis,
+        severity,
+        recommendations,
+        confidence,
+    };
+}
 
 export default { diagnoseHeartRate, analyzeTrend };
