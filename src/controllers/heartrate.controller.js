@@ -1,5 +1,7 @@
 import Data from "../models/data.model.js";
 import { diagnoseHeartRate, analyzeTrend } from "../services/ai.service.js";
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken"; // added for decoding bearer token if req.userId missing
 
 // Lưu dữ liệu nhịp tim khi user đăng nhập (với AI diagnosis)
 export const recordHeartRate = async (req, res) => {
@@ -59,8 +61,6 @@ export const recordHeartRate = async (req, res) => {
 };
 
 // Lấy lịch sử nhịp tim của user
-import mongoose from "mongoose";
-
 export const getHeartRateHistory = async (req, res) => {
     try {
         // Ưu tiên lấy từ middleware auth, fallback sang query param để test nhanh
@@ -87,10 +87,37 @@ export const getHeartRateHistory = async (req, res) => {
     }
 };
 
+// new helper: try req.userId, query.userId, then decode Bearer JWT (no verification)
+const getUserIdFromReq = (req) => {
+    // already set by auth middleware?
+    if (req.userId) return req.userId;
+    // allow quick test via query param
+    if (req.query?.userId) return req.query.userId;
+    // decode Bearer token payload to extract userId
+    const auth = req.headers?.authorization || "";
+    if (auth.startsWith("Bearer ")) {
+        const token = auth.split(" ")[1];
+        try {
+            const decoded = jwt.decode(token);
+            // token signed earlier with { userId: ... }
+            if (decoded && (decoded.userId || decoded.id || decoded.sub)) {
+                return decoded.userId || decoded.id || decoded.sub;
+            }
+        } catch (e) {
+            // ignore decode errors; will fallback to missing userId handling
+        }
+    }
+    return null;
+};
+
 // Lấy nhịp tim mới nhất
 export const getLatestHeartRate = async (req, res) => {
     try {
-        const userId = req.userId;
+        const rawUserId = getUserIdFromReq(req);
+        if (!rawUserId) {
+            return res.status(400).json({ message: "Missing userId (provide Authorization Bearer <token> or ?userId=...)" });
+        }
+        const userId = mongoose.isValidObjectId(rawUserId) ? new mongoose.Types.ObjectId(rawUserId) : rawUserId;
 
         const latestData = await Data.findOne({ userId }).sort({ createdAt: -1 });
 

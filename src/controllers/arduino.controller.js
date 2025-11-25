@@ -100,7 +100,7 @@ const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
             raw: payload.raw ?? null,
         };
 
-        // Prepare Data document
+        // Prepare Data document (only BPM + metadata)
         const dataDoc = new Data({
             userId,
             heartRate: Number(bpm),
