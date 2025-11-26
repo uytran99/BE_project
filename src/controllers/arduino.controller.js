@@ -57,6 +57,7 @@ export const receiveArduinoData = async (req, res) => {
  * - Body example:
  *   { "userId": "690b7d809c0b474d3e75ad6c", "bpm":75, "fallen":false, "mag_ema":0.98, "accel":{ax,ay,az}, "gps":{lat,lon}, "millis":123456 }
  */
+//
 export const receiveArduinoDataTest = async (req, res) => {
     try {
         const userId = req.body.userId || req.query.userId;
