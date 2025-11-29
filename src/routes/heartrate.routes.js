@@ -1,5 +1,5 @@
 import express from "express";
-import { recordHeartRate, getHeartRateHistory, getLatestHeartRate, getHeartRateStats, getHeartRateTrend, reDiagnose, getAlertsAndWarnings } from "../controllers/heartrate.controller.js";
+import { recordHeartRate, getHeartRateHistory, getLatestHeartRate, getHeartRateStats, getHeartRateTrend, reDiagnose, getAlertsAndWarnings, analyzeBpm } from "../controllers/heartrate.controller.js";
 import { receiveArduinoData, receiveArduinoDataTest } from "../controllers/arduino.controller.js";
 import { generatePairingCode, pairDevice } from "../controllers/device.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
@@ -18,6 +18,9 @@ router.post("/arduino", receiveArduinoData);
 
 // Lưu dữ liệu nhịp tim (với AI diagnosis tự động)
 router.post("/record", recordHeartRate);
+
+// Analyze only (no save) - UI: Record & Analyze button
+router.post("/analyze", analyzeBpm);
 
 // Lấy lịch sử nhịp tim
 router.get("/history", getHeartRateHistory);

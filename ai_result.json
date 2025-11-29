@@ -1,11 +1,11 @@
 {
   "severity": 0,
-  "confidence": 72.74,
-  "risk_assessment": "AI đánh giá: Rủi ro tim mạch rất thấp (72.7% confidence). Nhịp tim và các chỉ số khác trong phạm vi bình thường.",
+  "confidence": 76.56,
+  "risk_assessment": "AI assessment: Very low cardiovascular risk (76.6% confidence). Heart rate and other indicators are within normal ranges.",
   "recommendations": [
-    "Khám sức khỏe định kỳ",
-    "Duy trì chế độ ăn uống cân bằng",
-    "Tập thể dục đều đặn"
+    "Maintain a balanced diet",
+    "Routine health check-ups",
+    "Exercise regularly"
   ],
   "risk_factors": []
 }
