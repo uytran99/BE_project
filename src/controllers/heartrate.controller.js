@@ -241,32 +241,101 @@ export const getHeartRateStats = async (req, res) => {
 // Phân tích xu hướng nhịp tim bằng AI
 export const getHeartRateTrend = async (req, res) => {
     try {
-        const userId = req.userId;
-        const { days = 7 } = req.query;
+        const rawUserId = resolveUserId(req);
+        if (!rawUserId) {
+            return res.status(400).json({ error: "Missing userId (provide ?userId=... for testing or authenticate)" });
+        }
+
+        // Don't convert to ObjectId if it's not valid - let MongoDB handle string userId
+        let userId;
+        if (mongoose.isValidObjectId(rawUserId)) {
+            userId = new mongoose.Types.ObjectId(rawUserId);
+        } else {
+            // Use as string for non-ObjectId userIds (test accounts, etc)
+            userId = String(rawUserId).trim();
+        }
+
+        // Accept only valid periods: 7, 14, or 30 days
+        let { days } = req.query;
+        days = parseInt(days) || 7;
+
+        // Validate period
+        if (![7, 14, 30].includes(days)) {
+            days = 7; // default to 7 days if invalid
+        }
 
         const startDate = new Date();
-        startDate.setDate(startDate.getDate() - parseInt(days));
+        startDate.setDate(startDate.getDate() - days);
 
         const heartRateHistory = await Data.find({
             userId,
             createdAt: { $gte: startDate },
-        }).sort({ createdAt: -1 });
+        }).sort({ createdAt: 1 }); // ascending order for trend analysis
 
         if (heartRateHistory.length === 0) {
-            return res.status(404).json({ message: "No heart rate data found" });
+            return res.status(404).json({
+                success: false,
+                message: "No heart rate data found for this period",
+                period: days,
+                trendData: {
+                    trend: "No data available",
+                    insights: "Start recording heart rate data to see trend analysis",
+                    recommendations: ["Begin monitoring your heart rate regularly"],
+                    statistics: {
+                        average: "0 BPM",
+                        variability: "±0 BPM",
+                        min: 0,
+                        max: 0,
+                        totalReadings: 0,
+                    },
+                },
+            });
         }
 
-        console.log("🤖 Đang phân tích xu hướng bằng AI...");
+        console.log(`🤖 Đang phân tích xu hướng ${days} ngày bằng AI...`);
         const trendAnalysis = await analyzeTrend(heartRateHistory);
 
-        res.json({
-            period: `Last ${days} days`,
+        // Calculate statistics for UI
+        const hrValues = heartRateHistory.map((d) => d.heartRate).filter((hr) => typeof hr === "number");
+        const average = hrValues.length > 0 ? Math.round(hrValues.reduce((sum, val) => sum + val, 0) / hrValues.length) : 0;
+
+        // Calculate variability (standard deviation)
+        let variability = 0;
+        if (hrValues.length > 1) {
+            const variance = hrValues.reduce((sum, val) => sum + Math.pow(val - average, 2), 0) / hrValues.length;
+            variability = Math.round(Math.sqrt(variance) * 10) / 10; // round to 1 decimal
+        }
+
+        // Format response for UI
+        const responseData = {
+            success: true,
+            period: days, // return as number for UI to match selected period
+            periodLabel: `Last ${days} days`,
             dataPoints: heartRateHistory.length,
-            trendAnalysis: trendAnalysis.success ? trendAnalysis.trendAnalysis : null,
-            rawData: heartRateHistory.slice(0, 10), // Trả về 10 records gần nhất
-        });
+            trendData: {
+                trend: trendAnalysis.success ? trendAnalysis.trendAnalysis?.summary || trendAnalysis.trendAnalysis?.trend || "Data analyzed successfully" : "Unable to analyze trend at this time",
+                insights: trendAnalysis.success ? trendAnalysis.trendAnalysis?.insights || trendAnalysis.trendAnalysis?.analysis || "Analysis in progress" : "Insufficient data for detailed insights",
+                recommendations: trendAnalysis.success && Array.isArray(trendAnalysis.trendAnalysis?.recommendations) ? trendAnalysis.trendAnalysis.recommendations : trendAnalysis.success && trendAnalysis.trendAnalysis?.recommendations ? [trendAnalysis.trendAnalysis.recommendations] : ["Keep monitoring your heart rate regularly", "Maintain a healthy lifestyle", "Consult your doctor for personalized advice"],
+                statistics: {
+                    average: `${average} BPM`,
+                    variability: `±${variability} BPM`,
+                    min: Math.min(...hrValues),
+                    max: Math.max(...hrValues),
+                    totalReadings: hrValues.length,
+                },
+            },
+            rawAnalysis: trendAnalysis.success ? trendAnalysis.trendAnalysis : null,
+        };
+
+        res.json(responseData);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Trend analysis error:", error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            period: parseInt(req.query.days) || 7,
+            trendData: null,
+        });
     }
 };
 
