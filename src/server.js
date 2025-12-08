@@ -7,6 +7,11 @@ import dataRoutes from "./routes/data.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import heartRateRoutes from "./routes/heartrate.routes.js";
 import healthRoutes from "./routes/health.routes.js";
+import path from "path";
+import adminRoutes from "./routes/admin.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
+import devicesRoutes from "./routes/devices.routes.js";
+import heartRateApiRoutes from "./routes/heart-rate.routes.js";
 
 const app = express();
 app.use(cors());
@@ -56,9 +61,19 @@ app.use("/api/data", dataRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/heartrate", heartRateRoutes);
 app.use("/api/health", healthRoutes);
+// Admin Panel APIs
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/devices", devicesRoutes);
+app.use("/api/heart-rate", heartRateApiRoutes);
+
+// Serve public static assets (so admin UI can load CSS/JS if any)
+app.use(express.static(path.join(process.cwd(), "public")));
+
+// Mount admin router at /admin
+app.use("/admin", adminRoutes);
 
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
     console.log("✅ Ready to receive Railway healthcheck");
