@@ -134,11 +134,12 @@ export const getHeartRateHistory = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(Math.max(1, parseInt(limit)));
 
-        // Build UI-friendly readings array (time ISO + bpm)
+        // Build UI-friendly readings array (time ISO + bpm + deviceId)
         const readings = records.map((r) => ({
             id: r._id,
             timestamp: r.createdAt,
             heartRate: typeof r.heartRate === "number" ? r.heartRate : null,
+            deviceId: r.deviceId || "unknown",  // Device identifier
             status: r.status || null,
         }));
 
@@ -179,12 +180,14 @@ export const getLatestHeartRate = async (req, res) => {
             return res.status(404).json({ message: "No heart rate data found" });
         }
 
-        // Only return fields the UI needs (BPM + basic metadata)
+        // Only return fields the UI needs (BPM + basic metadata + ECG for chart)
         return res.json({
             success: true,
             data: {
                 id: latestData._id,
                 heartRate: latestData.heartRate,
+                ecg: latestData.ecg || null,  // ECG array or single value
+                ecgMetadata: latestData.ecgMetadata || null,  // Sampling rate, duration, quality
                 status: latestData.status || null,
                 createdAt: latestData.createdAt,
                 aiDiagnosis: latestData.aiDiagnosis || null, // optional for UI badge/notes
@@ -454,5 +457,128 @@ export const analyzeBpm = async (req, res) => {
     } catch (err) {
         console.error("analyzeBpm error:", err);
         return res.status(500).json({ error: "AI analysis failed" });
+    }
+};
+
+// Get latest ECG by deviceId
+export const getLatestByDevice = async (req, res) => {
+    try {
+        const { deviceId } = req.params;
+        const rawUserId = resolveUserId(req);
+        
+        if (!rawUserId) {
+            return res.status(400).json({ 
+                message: "Missing userId (provide ?userId=... for testing or authenticate)" 
+            });
+        }
+
+        const userId = mongoose.isValidObjectId(rawUserId) 
+            ? new mongoose.Types.ObjectId(rawUserId) 
+            : rawUserId;
+
+        const latestData = await Data.findOne({ 
+            userId, 
+            deviceId 
+        }).sort({ createdAt: -1 });
+
+        if (!latestData) {
+            return res.status(404).json({ 
+                success: false,
+                message: "No heart rate data found for this device" 
+            });
+        }
+
+        return res.json({
+            success: true,
+            data: {
+                id: latestData._id,
+                heartRate: latestData.heartRate,
+                ecg: latestData.ecg || null,
+                ecgMetadata: latestData.ecgMetadata || null,
+                deviceId: latestData.deviceId,
+                status: latestData.status || null,
+                createdAt: latestData.createdAt,
+                aiDiagnosis: latestData.aiDiagnosis || null,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
+    }
+};
+
+// Get history by deviceId
+export const getHistoryByDevice = async (req, res) => {
+    try {
+        const { deviceId } = req.params;
+        const rawUserId = resolveUserId(req);
+        
+        if (!rawUserId) {
+            return res.status(400).json({ 
+                error: "Missing userId (provide ?userId=... for testing or authenticate)" 
+            });
+        }
+
+        const userId = mongoose.isValidObjectId(rawUserId) 
+            ? new mongoose.Types.ObjectId(rawUserId) 
+            : rawUserId;
+
+        const { limit = 50, period = "24h" } = req.query;
+        
+        let startDate = null;
+        if (period === "24h") {
+            startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        } else if (period === "7d") {
+            startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        } else if (period === "30d") {
+            startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        } else if (period === "all") {
+            startDate = null;
+        } else if (!isNaN(Number(period))) {
+            startDate = new Date(Date.now() - Math.max(1, Number(period)) * 24 * 60 * 60 * 1000);
+        }
+
+        const query = { userId, deviceId };
+        if (startDate) query.createdAt = { $gte: startDate };
+
+        const records = await Data.find(query)
+            .sort({ createdAt: -1 })
+            .limit(Math.max(1, parseInt(limit)));
+
+        // Build readings array
+        const readings = records.map((r) => ({
+            id: r._id,
+            timestamp: r.createdAt,
+            heartRate: typeof r.heartRate === "number" ? r.heartRate : null,
+            ecg: r.ecg || null,
+            ecgMetadata: r.ecgMetadata || null,
+            status: r.status || null,
+            aiDiagnosis: r.aiDiagnosis || null,
+        }));
+
+        // Stats
+        const hrValues = readings.map((r) => r.heartRate).filter((h) => typeof h === "number");
+        const count = hrValues.length;
+        const avg = count ? Math.round(hrValues.reduce((s, v) => s + v, 0) / count) : null;
+        const min = count ? Math.min(...hrValues) : null;
+        const max = count ? Math.max(...hrValues) : null;
+
+        return res.json({
+            success: true,
+            deviceId,
+            period,
+            averageHR: avg,
+            minHR: min,
+            maxHR: max,
+            readingsCount: count,
+            readings,
+        });
+    } catch (error) {
+        return res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
     }
 };

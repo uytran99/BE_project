@@ -9,10 +9,12 @@ POST http://localhost:3000/api/heartrate/arduino/test
 ## Request Body (JSON)
 
 ### Fields bắt buộc:
+
 - `userId` (string) - ID của user (có thể lấy từ database hoặc tạo user mới)
 - `bpm` hoặc `heartRate` (number) - Nhịp tim (0-300)
 
 ### Fields tùy chọn:
+
 - `accel` (object) - Gia tốc kế: `{ "ax": 1.2, "ay": 0.8, "az": 1.5 }`
 - `acc` (array) - Gia tốc dạng array: `[1.2, 0.8, 1.5]`
 - `fallen` (boolean) - Phát hiện ngã
@@ -63,7 +65,32 @@ POST http://localhost:3000/api/heartrate/arduino/test
 }
 ```
 
-### 3. Request với heartRate thay vì bpm:
+### 3. Request với ECG Array (để vẽ điện tâm đồ):
+
+```json
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "bpm": 78,
+  "ecg": [
+    0.12, 0.15, 0.18, 0.22, 0.28, 0.35, 0.42, 0.48, 0.52, 0.55, 0.58, 0.62,
+    0.68, 0.75, 0.82, 0.88, 0.92, 0.95, 0.98, 1.02, 1.08, 1.15, 1.22, 1.18,
+    1.12, 1.05, 0.98, 0.92, 0.88, 0.85
+  ],
+  "ecgMetadata": {
+    "samplingRate": 250,
+    "duration": 0.12,
+    "unit": "mV",
+    "quality": "excellent"
+  },
+  "accel": {
+    "ax": 1.0,
+    "ay": 0.5,
+    "az": 9.8
+  }
+}
+```
+
+### 4. Request với heartRate thay vì bpm:
 
 ```json
 {
@@ -77,12 +104,14 @@ POST http://localhost:3000/api/heartrate/arduino/test
 ## Cách test trong Postman
 
 ### Bước 1: Setup Request
+
 1. Method: **POST**
 2. URL: `http://localhost:3000/api/heartrate/arduino/test`
 3. Headers:
    - `Content-Type: application/json`
 
 ### Bước 2: Body
+
 1. Chọn tab **Body**
 2. Chọn **raw**
 3. Chọn **JSON** từ dropdown
@@ -93,6 +122,7 @@ POST http://localhost:3000/api/heartrate/arduino/test
 Nếu chưa có userId, có thể:
 
 **Option 1: Tạo user mới**
+
 ```
 POST http://localhost:3000/api/auth/register
 Body:
@@ -102,13 +132,16 @@ Body:
   "password": "password123"
 }
 ```
+
 Response sẽ có `userId` trong response.
 
 **Option 2: Lấy userId từ database**
+
 - Query MongoDB collection `users`
 - Hoặc dùng admin API: `GET /admin/api/users`
 
 **Option 3: Dùng userId test mặc định**
+
 ```
 "userId": "507f1f77bcf86cd799439011"
 ```
@@ -120,6 +153,7 @@ Click **Send** và xem response.
 ## Response mẫu
 
 ### Success (201 Created):
+
 ```json
 {
   "message": "Arduino data recorded (test/prod)",
@@ -154,6 +188,7 @@ Click **Send** và xem response.
 ```
 
 ### Error (400 Bad Request):
+
 ```json
 {
   "message": "userId is required in body for test endpoint"
@@ -171,6 +206,7 @@ hoặc
 ## Test Cases
 
 ### Test Case 1: Nhịp tim bình thường
+
 ```json
 {
   "userId": "507f1f77bcf86cd799439011",
@@ -179,6 +215,7 @@ hoặc
 ```
 
 ### Test Case 2: Nhịp tim cao (cảnh báo)
+
 ```json
 {
   "userId": "507f1f77bcf86cd799439011",
@@ -187,6 +224,7 @@ hoặc
 ```
 
 ### Test Case 3: Nhịp tim rất cao (critical)
+
 ```json
 {
   "userId": "507f1f77bcf86cd799439011",
@@ -195,6 +233,7 @@ hoặc
 ```
 
 ### Test Case 4: Nhịp tim thấp
+
 ```json
 {
   "userId": "507f1f77bcf86cd799439011",
@@ -203,6 +242,7 @@ hoặc
 ```
 
 ### Test Case 5: Với đầy đủ sensor data
+
 ```json
 {
   "userId": "507f1f77bcf86cd799439011",
@@ -238,18 +278,20 @@ hoặc
 ## Troubleshooting
 
 ### Lỗi "userId is required"
+
 - Đảm bảo có field `userId` trong request body
 - userId phải là string hợp lệ
 
 ### Lỗi "Missing or invalid bpm/heartRate"
+
 - Đảm bảo có `bpm` hoặc `heartRate` trong body
 - Giá trị phải là number, không phải string
 
 ### Lỗi 500 Server Error
+
 - Kiểm tra MongoDB connection
 - Kiểm tra server logs để xem chi tiết lỗi
 
 ## Postman Collection
 
 Có thể import file `Heart_Rate_Monitor_API.postman_collection.json` để có sẵn các requests.
-

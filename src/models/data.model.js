@@ -16,7 +16,22 @@ const DataSchema = new mongoose.Schema({
         min: 0,
         max: 300,
     },
-    ecg: Number,
+    // ECG data - flexible schema
+    ecg: {
+        type: mongoose.Schema.Types.Mixed, // Supports both Number (legacy) or Array
+        default: null,
+    },
+    // ECG metadata for chart rendering
+    ecgMetadata: {
+        samplingRate: Number,    // Hz (e.g., 250 Hz, 500 Hz)
+        duration: Number,        // seconds
+        unit: String,            // "mV" or "ADC"
+        dataPoints: Number,      // total data points
+        quality: {               // signal quality
+            type: String,
+            enum: ["excellent", "good", "fair", "poor"],
+        },
+    },
     acc: [Number],
     status: {
         type: String,

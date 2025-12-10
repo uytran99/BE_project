@@ -83,6 +83,39 @@ const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
             return res.status(400).json({ message: "Missing or invalid bpm/heartRate" });
         }
 
+        // ============ AUTO-CREATE/UPDATE DEVICE (NEW) ============
+        const deviceId = payload.deviceId || "unknown";
+        
+        if (deviceId !== "unknown") {
+            try {
+                // Find or create device
+                let device = await Device.findOne({ deviceId, userId });
+                
+                if (!device) {
+                    // Create new device
+                    device = new Device({
+                        userId,
+                        deviceId,
+                        name: payload.deviceName || deviceId,  // Use provided name or deviceId
+                        deviceName: payload.deviceName || deviceId,
+                        status: "online",
+                        isPaired: true,
+                        lastConnected: new Date(),
+                    });
+                    await device.save();
+                    console.log(`✅ Auto-created device: ${deviceId}`);
+                } else {
+                    // Update existing device (last connected time + status)
+                    device.lastConnected = new Date();
+                    device.status = "online";
+                    await device.save();
+                }
+            } catch (deviceErr) {
+                console.warn("⚠️ Failed to create/update device:", deviceErr.message);
+                // Continue even if device creation fails
+            }
+        }
+
         // Map accel
         let accArray = null;
         if (payload.accel && typeof payload.accel === "object") {
@@ -101,11 +134,39 @@ const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
             raw: payload.raw ?? null,
         };
 
+        // Handle ECG data (supports both single value and array)
+        let ecgData = null;
+        let ecgMetadata = null;
+        
+        if (payload.ecg !== undefined && payload.ecg !== null) {
+            ecgData = payload.ecg; // Can be Number or Array
+            
+            // If ECG metadata is provided
+            if (payload.ecgMetadata) {
+                ecgMetadata = {
+                    samplingRate: payload.ecgMetadata.samplingRate || null,
+                    duration: payload.ecgMetadata.duration || null,
+                    unit: payload.ecgMetadata.unit || "mV",
+                    dataPoints: Array.isArray(ecgData) ? ecgData.length : 1,
+                    quality: payload.ecgMetadata.quality || null,
+                };
+            } else if (Array.isArray(ecgData)) {
+                // Auto-generate metadata if ECG is array but no metadata provided
+                ecgMetadata = {
+                    dataPoints: ecgData.length,
+                    unit: "mV",
+                    quality: null,
+                };
+            }
+        }
+
         // Prepare Data document (only BPM + metadata)
         const dataDoc = new Data({
             userId,
+            deviceId: payload.deviceId || "unknown",  // Save deviceId from payload
             heartRate: Number(bpm),
-            ecg: payload.ecg ?? null,
+            ecg: ecgData,
+            ecgMetadata: ecgMetadata,
             acc: accArray,
             notes: JSON.stringify(extras),
             createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),

@@ -1,5 +1,5 @@
 import express from "express";
-import { recordHeartRate, getHeartRateHistory, getLatestHeartRate, getHeartRateStats, getHeartRateTrend, reDiagnose, getAlertsAndWarnings, analyzeBpm } from "../controllers/heartrate.controller.js";
+import { recordHeartRate, getHeartRateHistory, getLatestHeartRate, getHeartRateStats, getHeartRateTrend, reDiagnose, getAlertsAndWarnings, analyzeBpm, getLatestByDevice, getHistoryByDevice } from "../controllers/heartrate.controller.js";
 import { receiveArduinoData, receiveArduinoDataTest } from "../controllers/arduino.controller.js";
 import { generatePairingCode, pairDevice } from "../controllers/device.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
@@ -37,6 +37,13 @@ router.get("/trend", getHeartRateTrend);
 
 // Chuẩn đoán lại một record cụ thể
 router.post("/re-diagnose/:recordId", reDiagnose);
+
+// Device-specific endpoints (NEW)
+// Lấy nhịp tim mới nhất của một device cụ thể
+router.get("/device/:deviceId/latest", getLatestByDevice);
+
+// Lấy lịch sử nhịp tim của một device cụ thể
+router.get("/device/:deviceId/history", getHistoryByDevice);
 
 // Lấy danh sách cảnh báo và trường hợp cần chú ý
 router.get("/alerts", getAlertsAndWarnings);
