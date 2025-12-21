@@ -3,9 +3,9 @@
   "confidence": 76.56,
   "risk_assessment": "AI assessment: Very low cardiovascular risk (76.6% confidence). Heart rate and other indicators are within normal ranges.",
   "recommendations": [
-    "Exercise regularly",
     "Maintain a balanced diet",
-    "Routine health check-ups"
+    "Routine health check-ups",
+    "Exercise regularly"
   ],
   "risk_factors": []
 }

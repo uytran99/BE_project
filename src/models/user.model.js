@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema(
       type: [String], // bệnh nền / health conditions (e.g. 'hypertension','diabetes','athlete')
       default: [],
     },
+    // ===== Role-Based Access Control =====
+    role: {
+      type: String,
+      enum: ['user', 'admin', 'doctor'],
+      default: 'user',
+    },
   },
   {
     timestamps: true,

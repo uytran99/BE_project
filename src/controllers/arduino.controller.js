@@ -71,9 +71,6 @@ export const receiveArduinoDataTest = async (req, res) => {
     }
 };
 
-/**
- * Internal helper: creates Data doc for a given userId and payload, runs AI diagnosis, saves and returns response.
- */
 const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
     try {
         const userId = mongoose.isValidObjectId(userIdRaw) ? new mongoose.Types.ObjectId(userIdRaw) : userIdRaw;
@@ -85,18 +82,18 @@ const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
 
         // ============ AUTO-CREATE/UPDATE DEVICE (NEW) ============
         const deviceId = payload.deviceId || "unknown";
-        
+
         if (deviceId !== "unknown") {
             try {
                 // Find or create device
                 let device = await Device.findOne({ deviceId, userId });
-                
+
                 if (!device) {
                     // Create new device
                     device = new Device({
                         userId,
                         deviceId,
-                        name: payload.deviceName || deviceId,  // Use provided name or deviceId
+                        name: payload.deviceName || deviceId, // Use provided name or deviceId
                         deviceName: payload.deviceName || deviceId,
                         status: "online",
                         isPaired: true,
@@ -137,10 +134,10 @@ const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
         // Handle ECG data (supports both single value and array)
         let ecgData = null;
         let ecgMetadata = null;
-        
+
         if (payload.ecg !== undefined && payload.ecg !== null) {
             ecgData = payload.ecg; // Can be Number or Array
-            
+
             // If ECG metadata is provided
             if (payload.ecgMetadata) {
                 ecgMetadata = {
@@ -163,7 +160,7 @@ const _saveArduinoDataForUser = async (userIdRaw, payload, res) => {
         // Prepare Data document (only BPM + metadata)
         const dataDoc = new Data({
             userId,
-            deviceId: payload.deviceId || "unknown",  // Save deviceId from payload
+            deviceId: payload.deviceId || "unknown", // Save deviceId from payload
             heartRate: Number(bpm),
             ecg: ecgData,
             ecgMetadata: ecgMetadata,

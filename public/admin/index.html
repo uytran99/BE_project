@@ -1,158 +1,820 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Admin - Heart App</title>
-        <style>
-            body {
-                font-family: Segoe UI, Arial;
-                margin: 20px;
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Heart Rate Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            color: #fca5a5;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card.users { border-left: 4px solid #3b82f6; }
+        .stat-card.records { border-left: 4px solid #10b981; }
+        .stat-card.warnings { border-left: 4px solid #f59e0b; }
+        .stat-card.critical { border-left: 4px solid #ef4444; }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Section */
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2 svg {
+            width: 22px;
+            height: 22px;
+            fill: #e94560;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-normal { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+        .badge-critical { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-admin { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+        .badge-user { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
+        /* Action buttons */
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 6px;
+        }
+
+        .action-btn.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .action-btn.diagnose {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+
+        .action-btn.diagnose:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background: rgba(16, 185, 129, 0.9);
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.error {
+            background: rgba(239, 68, 68, 0.9);
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-            table {
-                border-collapse: collapse;
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .header-right {
                 width: 100%;
-                margin-bottom: 20px;
+                justify-content: space-between;
             }
-            th,
-            td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-            th {
-                background: #f4f4f4;
-            }
-            button {
-                margin-right: 6px;
-            }
+
             .controls {
-                margin-bottom: 12px;
+                flex-direction: column;
             }
-        </style>
-    </head>
-    <body>
-        <h1>Admin Panel</h1>
-        <div class="controls">
-            <label>Admin token: <input id="token" placeholder="paste token" style="width: 320px" /></label>
-            <button id="refresh">Refresh</button>
-            <button id="export">Export CSV</button>
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+            </div>
+            <h1>Admin Dashboard</h1>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">A</div>
+                <div class="user-details">
+                    <span class="user-name" id="user-name">Admin</span>
+                    <span class="user-role" id="user-role">Administrator</span>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card users">
+                <div class="stat-label">Tổng Users</div>
+                <div class="stat-value" id="stat-users">0</div>
+            </div>
+            <div class="stat-card records">
+                <div class="stat-label">Tổng Records</div>
+                <div class="stat-value" id="stat-records">0</div>
+            </div>
+            <div class="stat-card warnings">
+                <div class="stat-label">Warning</div>
+                <div class="stat-value" id="stat-warnings">0</div>
+            </div>
+            <div class="stat-card critical">
+                <div class="stat-label">Critical</div>
+                <div class="stat-value" id="stat-critical">0</div>
+            </div>
         </div>
 
-        <h2>Users</h2>
-        <div id="users"></div>
+        <!-- Controls -->
+        <div class="controls">
+            <button class="btn btn-primary" onclick="refreshAll()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                Làm mới
+            </button>
+            <button class="btn btn-secondary" onclick="exportCSV()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                Export CSV
+            </button>
+        </div>
 
-        <h2>Data Records</h2>
-        <div id="data"></div>
+        <!-- Users Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    Quản lý Users
+                </h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Age</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table">
+                        <tr><td colspan="6" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        <script>
-            const tokenInput = document.getElementById("token");
-            const headers = () => ({ "x-admin-token": tokenInput.value });
+        <!-- Data Records Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                    Dữ liệu nhịp tim
+                </h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User ID</th>
+                            <th>Heart Rate</th>
+                            <th>Status</th>
+                            <th>AI Diagnosis</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table">
+                        <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-            async function fetchJson(url, opts = {}) {
-                opts.headers = Object.assign({}, opts.headers || {}, headers());
-                const r = await fetch(url, opts);
-                return r.json();
+    <script>
+        // Get token from localStorage
+        const getToken = () => localStorage.getItem('adminToken');
+        const getUser = () => {
+            try {
+                return JSON.parse(localStorage.getItem('adminUser'));
+            } catch {
+                return null;
+            }
+        };
+
+        // Check authentication on page load
+        async function checkAuth() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = '/admin/login';
+                return false;
             }
 
-            function el(tag, txt) {
-                const e = document.createElement(tag);
-                if (txt !== undefined) e.textContent = txt;
-                return e;
-            }
-
-            async function renderUsers() {
-                const res = await fetchJson("/admin/api/users");
-                const container = document.getElementById("users");
-                container.innerHTML = "";
-                if (!res.success) return (container.textContent = "Error: " + (res.error || JSON.stringify(res)));
-                const table = document.createElement("table");
-                const thead = el("thead");
-                thead.innerHTML = "<tr><th>ID</th><th>Username</th><th>Email</th><th>Age</th><th>Actions</th></tr>";
-                table.appendChild(thead);
-                const tbody = document.createElement("tbody");
-                res.users.forEach((u) => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `<td>${u._id}</td><td>${u.username || ""}</td><td>${u.email || ""}</td><td>${u.age || ""}</td>`;
-                    const td = document.createElement("td");
-                    const btnDelete = document.createElement("button");
-                    btnDelete.textContent = "Delete";
-                    btnDelete.onclick = async () => {
-                        if (confirm("Delete user?")) {
-                            await fetchJson("/admin/api/users/" + u._id, { method: "DELETE" });
-                            await refreshAll();
-                        }
-                    };
-                    td.appendChild(btnDelete);
-                    tr.appendChild(td);
-                    tbody.appendChild(tr);
+            try {
+                const res = await fetch('/admin/api/verify', {
+                    headers: { 'Authorization': 'Bearer ' + token }
                 });
-                table.appendChild(tbody);
-                container.appendChild(table);
-            }
+                const data = await res.json();
 
-            async function renderData() {
-                const res = await fetchJson("/admin/api/data");
-                const container = document.getElementById("data");
-                container.innerHTML = "";
-                if (!res.success) return (container.textContent = "Error: " + (res.error || JSON.stringify(res)));
-                const table = document.createElement("table");
-                const thead = el("thead");
-                thead.innerHTML = "<tr><th>ID</th><th>UserId</th><th>HR</th><th>Status</th><th>AI</th><th>Time</th><th>Actions</th></tr>";
-                table.appendChild(thead);
-                const tbody = document.createElement("tbody");
-                res.records.forEach((r) => {
-                    const tr = document.createElement("tr");
-                    const ai = r.aiDiagnosis ? r.aiDiagnosis.diagnosis || r.aiDiagnosis.severity : "";
-                    tr.innerHTML = `<td>${r._id}</td><td>${r.userId || ""}</td><td>${r.heartRate || ""}</td><td>${r.status || ""}</td><td>${ai}</td><td>${new Date(r.createdAt).toLocaleString()}</td>`;
-                    const td = document.createElement("td");
-                    const btnDelete = document.createElement("button");
-                    btnDelete.textContent = "Delete";
-                    btnDelete.onclick = async () => {
-                        if (confirm("Delete record?")) {
-                            await fetchJson("/admin/api/data/" + r._id, { method: "DELETE" });
-                            await refreshAll();
-                        }
-                    };
-                    const btnRe = document.createElement("button");
-                    btnRe.textContent = "Re-diagnose";
-                    btnRe.onclick = async () => {
-                        btnRe.textContent = "Working...";
-                        await fetchJson("/admin/api/re-diagnose/" + r._id, { method: "POST" });
-                        btnRe.textContent = "Re-diagnose";
-                        await refreshAll();
-                    };
-                    td.appendChild(btnRe);
-                    td.appendChild(btnDelete);
-                    tr.appendChild(td);
-                    tbody.appendChild(tr);
-                });
-                table.appendChild(tbody);
-                container.appendChild(table);
-            }
+                if (!data.success) {
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                    window.location.href = '/admin/login';
+                    return false;
+                }
 
-            async function exportCSV() {
-                const token = tokenInput.value;
-                if (!token) {
-                    alert("Provide admin token");
+                // Update user info in header
+                updateUserInfo(data.user);
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/admin/login';
+                return false;
+            }
+        }
+
+        // Update user info in header
+        function updateUserInfo(user) {
+            if (user) {
+                document.getElementById('user-name').textContent = user.username || 'Admin';
+                document.getElementById('user-role').textContent = user.role === 'admin' ? 'Administrator' : user.role;
+                document.getElementById('user-avatar').textContent = (user.username || 'A').charAt(0).toUpperCase();
+            }
+        }
+
+        // Fetch helper with auth
+        async function fetchApi(url, opts = {}) {
+            const token = getToken();
+            opts.headers = {
+                ...opts.headers,
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            };
+            const res = await fetch(url, opts);
+            return res.json();
+        }
+
+        // Show loading
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Show toast
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.toggle('error', isError);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            window.location.href = '/admin/login';
+        }
+
+        // Render users table
+        async function renderUsers() {
+            try {
+                const res = await fetchApi('/admin/api/users');
+                const tbody = document.getElementById('users-table');
+
+                if (!res.success) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${res.error}</td></tr>`;
                     return;
                 }
-                const url = "/admin/api/export/data";
-                // force download by navigating with token as query param (middleware accepts query)
-                window.location = url + "?adminToken=" + encodeURIComponent(token);
+
+                // Update stats
+                document.getElementById('stat-users').textContent = res.count || 0;
+
+                if (!res.users || res.users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Không có users</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.users.map(user => `
+                    <tr>
+                        <td style="font-family: monospace; font-size: 12px;">${user._id}</td>
+                        <td><strong>${user.username || '-'}</strong></td>
+                        <td>${user.email || '-'}</td>
+                        <td>
+                            <span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">
+                                ${user.role || 'user'}
+                            </span>
+                        </td>
+                        <td>${user.age || '-'}</td>
+                        <td>
+                            <button class="action-btn delete" onclick="deleteUser('${user._id}')">Xóa</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Render users error:', error);
             }
+        }
 
-            async function refreshAll() {
-                await renderUsers();
-                await renderData();
+        // Render data table
+        async function renderData() {
+            try {
+                const res = await fetchApi('/admin/api/data');
+                const tbody = document.getElementById('data-table');
+
+                if (!res.success) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error: ${res.error}</td></tr>`;
+                    return;
+                }
+
+                // Update stats
+                document.getElementById('stat-records').textContent = res.count || 0;
+
+                let warningCount = 0;
+                let criticalCount = 0;
+
+                if (!res.records || res.records.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Không có dữ liệu</td></tr>';
+                    return;
+                }
+
+                res.records.forEach(r => {
+                    if (r.status === 'warning') warningCount++;
+                    if (r.status === 'critical') criticalCount++;
+                });
+
+                document.getElementById('stat-warnings').textContent = warningCount;
+                document.getElementById('stat-critical').textContent = criticalCount;
+
+                tbody.innerHTML = res.records.map(record => {
+                    const ai = record.aiDiagnosis ? (record.aiDiagnosis.diagnosis || record.aiDiagnosis.severity) : '-';
+                    const statusClass = record.status === 'critical' ? 'badge-critical' : 
+                                       record.status === 'warning' ? 'badge-warning' : 'badge-normal';
+                    return `
+                        <tr>
+                            <td style="font-family: monospace; font-size: 12px;">${record._id}</td>
+                            <td style="font-family: monospace; font-size: 12px;">${record.userId || '-'}</td>
+                            <td><strong>${record.heartRate || '-'} BPM</strong></td>
+                            <td>
+                                <span class="badge ${statusClass}">${record.status || '-'}</span>
+                            </td>
+                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${ai}</td>
+                            <td>${new Date(record.createdAt).toLocaleString('vi-VN')}</td>
+                            <td>
+                                <button class="action-btn diagnose" onclick="reDiagnose('${record._id}')">Re-diagnose</button>
+                                <button class="action-btn delete" onclick="deleteData('${record._id}')">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Render data error:', error);
             }
+        }
 
-            document.getElementById("refresh").addEventListener("click", refreshAll);
-            document.getElementById("export").addEventListener("click", exportCSV);
+        // Delete user
+        async function deleteUser(id) {
+            if (!confirm('Bạn có chắc muốn xóa user này? Tất cả dữ liệu liên quan sẽ bị xóa.')) return;
 
-            // initial (user must paste token)
-            document.getElementById("token").addEventListener("keyup", (e) => {
-                if (e.key === "Enter") refreshAll();
-            });
-        </script>
-    </body>
+            showLoading();
+            try {
+                const res = await fetchApi('/admin/api/users/' + id, { method: 'DELETE' });
+                if (res.success) {
+                    showToast('Đã xóa user thành công');
+                    await refreshAll();
+                } else {
+                    showToast(res.error || 'Xóa thất bại', true);
+                }
+            } catch (error) {
+                showToast('Lỗi: ' + error.message, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Delete data record
+        async function deleteData(id) {
+            if (!confirm('Bạn có chắc muốn xóa record này?')) return;
+
+            showLoading();
+            try {
+                const res = await fetchApi('/admin/api/data/' + id, { method: 'DELETE' });
+                if (res.success) {
+                    showToast('Đã xóa record thành công');
+                    await refreshAll();
+                } else {
+                    showToast(res.error || 'Xóa thất bại', true);
+                }
+            } catch (error) {
+                showToast('Lỗi: ' + error.message, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Re-diagnose
+        async function reDiagnose(id) {
+            showLoading();
+            try {
+                const res = await fetchApi('/admin/api/re-diagnose/' + id, { method: 'POST' });
+                if (res.success) {
+                    showToast('Re-diagnose thành công');
+                    await refreshAll();
+                } else {
+                    showToast(res.error || 'Re-diagnose thất bại', true);
+                }
+            } catch (error) {
+                showToast('Lỗi: ' + error.message, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Export CSV
+        function exportCSV() {
+            const token = getToken();
+            window.location.href = '/admin/api/export/data?token=' + encodeURIComponent(token);
+        }
+
+        // Refresh all data
+        async function refreshAll() {
+            showLoading();
+            try {
+                await Promise.all([renderUsers(), renderData()]);
+                showToast('Đã làm mới dữ liệu');
+            } catch (error) {
+                showToast('Lỗi: ' + error.message, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Initialize
+        (async () => {
+            const authenticated = await checkAuth();
+            if (authenticated) {
+                await refreshAll();
+            }
+        })();
+    </script>
+</body>
 </html>

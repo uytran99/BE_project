@@ -12,6 +12,7 @@
     "deploy": "./deploy.sh",
     "deploy-render": "./render-deploy.sh",
     "postinstall": "npm run setup-ai",
+    "create-admin": "node scripts/create-admin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
